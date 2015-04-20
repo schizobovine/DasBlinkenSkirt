@@ -1,46 +1,62 @@
 #include<Arduino.h>
 #include<Wire.h>
-#include<Adafruit_LSM303.h>
-#include<string.h>
+#include<HPRGB2.h>
 
-Adafruit_LSM303 accel;
+#define SERIAL_DEBUG 1
+#define WRITE_EEPROM 1
+
+const uint16_t ISET_R = 100;
+const uint16_t ISET_G = 100;
+const uint16_t ISET_B = 100;
+
+const uint16_t PWM_FREQ = 600;
+
+const int TEST_DELAY = 2000;
+
+HPRGB led_driver;
 
 void setup() {
 
+#if SERIAL_DEBUG
+  // Setup serial for debugging
   Serial.begin(9600);
   Serial.println("HAI");
+#endif
 
-  while (!accel.begin()) {
-    Serial.println("Unable to initialize i2c with LSM303 module! Retrying in 5s...");
-    delay(5000);
-  }
+  // Initialize i2c comms
+  led_driver.begin();
 
-}
+  // Set current limit and PWM frequencies
+  led_driver.setCurrent(ISET_R, ISET_G, ISET_B);
+  led_driver.setFreq(PWM_FREQ);
 
-void barf(int16_t x, int16_t y, int16_t z) {
-  char buff[16];
+#if WRITE_EEPROM
+  // Write settings to EEPROM but only if it's compiled in (should only need to
+  // do once since, well, it's EEPROM).
+  led_driver.eepromWrite();// write current settings to EEPROM
 
-  snprintf(buff, 16, "(% 6d, ", x);
-  Serial.print(buff);
-
-  snprintf(buff, 16, "% 6d, ", y);
-  Serial.print(buff);
-
-  snprintf(buff, 16, "% 6d)", z);
-  Serial.print(buff);
+  // From the original author, I assume to insure the write is finished?
+  delay(100);
+#endif
 
 }
 
 void loop() {
 
-  accel.read();
+  // Test red channel
+  led_driver.goToRGB(255,0,0);
+  delay(TEST_DELAY);
 
-  Serial.print("Acc = ");
-  barf(accel.acc.x, accel.acc.y, accel.acc.z);
-  Serial.print(" Mag = ");
-  barf(accel.mag.x, accel.mag.y, accel.mag.z);
-  Serial.println();
+  // Test green channel
+  led_driver.goToRGB(0, 255, 0);
+  delay(TEST_DELAY);
 
-  delay(1000);
+  // Test blue channel
+  led_driver.goToRGB(0, 0, 255);
+  delay(TEST_DELAY);
+
+  // Everybody together now...
+  led_driver.goToRGB(255,255,255);
+  delay(TEST_DELAY);
 
 }
