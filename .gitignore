@@ -30,6 +30,10 @@
 *.x86_64
 *.hex
 
+# Build directories
+build-cli
+build-*
+
 # Ignore list for Eagle, a PCB layout tool
 
 # Backup files

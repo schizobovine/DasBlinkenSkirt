@@ -1,34 +1,49 @@
-#include<Arduino.h>
-#include<Wire.h>
-#include<HPRGB2.h>
+#include "dasblinkenskirt.h"
 
-#define SERIAL_DEBUG 1
-#define WRITE_EEPROM 1
+// Initial values for colors
+uint8_t color_r = 0;
+uint8_t color_g = 0;
+uint8_t color_b = 0;
 
-const uint16_t ISET_R = 100;
-const uint16_t ISET_G = 100;
-const uint16_t ISET_B = 100;
+// Initial values for LED current
+uint16_t iset_r = ISET_OFF;
+uint16_t iset_g = ISET_OFF;
+uint16_t iset_b = ISET_OFF;
 
-const uint16_t PWM_FREQ = 600;
+// Initial state setup
+color_state_t color_state = CS_RED;
+bright_state_t bright_state = BRIGHT_OFF;
 
-const int TEST_DELAY = 2000;
+// LED driver object
+HPRGB led_driver = HPRGB();
 
-HPRGB led_driver;
+// Button debouncers
+Button butt_color = Button(PIN_COLOR);
+Button butt_bright = Button(PIN_BRIGHT);
+
+////////////////////////////////////////////////////////////////////////
+// setup() - Called once just after device reset
+////////////////////////////////////////////////////////////////////////
 
 void setup() {
 
 #if SERIAL_DEBUG
   // Setup serial for debugging
   Serial.begin(9600);
-  Serial.println("HAI");
+  Serial.println("HELLO");
 #endif
 
   // Initialize i2c comms
+  Wire.begin();
   led_driver.begin();
 
   // Set current limit and PWM frequencies
-  led_driver.setCurrent(ISET_R, ISET_G, ISET_B);
+  led_driver.setCurrent(iset_r, iset_g, iset_b);
   led_driver.setFreq(PWM_FREQ);
+
+  // Setup buttons
+  pinMode(PIN_COLOR, INPUT_PULLUP);
+  pinMode(PIN_BRIGHT, INPUT_PULLUP);
 
 #if WRITE_EEPROM
   // Write settings to EEPROM but only if it's compiled in (should only need to
@@ -41,22 +56,83 @@ void setup() {
 
 }
 
+////////////////////////////////////////////////////////////////////////
+// loop() - Done many times, like your mom
+////////////////////////////////////////////////////////////////////////
+
 void loop() {
 
-  // Test red channel
-  led_driver.goToRGB(255,0,0);
-  delay(TEST_DELAY);
+  // Check if color change button has been pushed
+  if (butt_color.debounce()) {
+    switch (color_state) {
+      case CS_BLUE:
+        color_r = 255;
+        color_g = 0;
+        color_b = 0;
+        color_state = CS_RED;
+        DPRINTLN("RED");
+        break;
+      case CS_RED:
+        color_r = 0;
+        color_g = 255;
+        color_b = 0;
+        DPRINTLN("GREEN");
+        color_state = CS_GREEN;
+        break;
+      case CS_GREEN:
+        color_r = 0;
+        color_g = 0;
+        color_b = 255;
+        DPRINTLN("BLUE");
+        color_state = CS_BLUE;
+        break;
+      default:
+        DPRINTLN("OMG SHOULD NOT HAPPEN (1)");
+        break;
+    }
+  }
 
-  // Test green channel
-  led_driver.goToRGB(0, 255, 0);
-  delay(TEST_DELAY);
 
-  // Test blue channel
-  led_driver.goToRGB(0, 0, 255);
-  delay(TEST_DELAY);
+  // Check if brightness change button has been pushed
+  if (butt_bright.debounce()) {
+    switch (bright_state) {
+      case BRIGHT_HIGH:
+        iset_r = ISET_OFF;
+        iset_g = ISET_OFF;
+        iset_b = ISET_OFF;
+        bright_state = BRIGHT_OFF;
+        DPRINTLN("OFF");
+        break;
+      case BRIGHT_OFF:
+        iset_r = ISET_LOW;
+        iset_g = ISET_LOW;
+        iset_b = ISET_LOW;
+        bright_state = BRIGHT_LOW;
+        DPRINTLN("LOW");
+        break;
+      case BRIGHT_LOW:
+        iset_r = ISET_MED;
+        iset_g = ISET_MED;
+        iset_b = ISET_MED;
+        bright_state = BRIGHT_MED;
+        DPRINTLN("MED");
+        break;
+      case BRIGHT_MED:
+        iset_r = ISET_HIGH;
+        iset_g = ISET_HIGH;
+        iset_b = ISET_HIGH;
+        bright_state = BRIGHT_HIGH;
+        DPRINTLN("HIGH");
+        break;
+      default:
+        DPRINTLN("OMG SHOULD NOT HAPPEN (2)");
+        break;
+    }
+  }
 
-  // Everybody together now...
-  led_driver.goToRGB(255,255,255);
-  delay(TEST_DELAY);
+  // Perform settings
+  //led_driver.goToRGB(color_r, color_g, color_b);
+  //led_driver.setCurrent(iset_r, iset_g, iset_b);
+  //delay(1000);
 
 }
