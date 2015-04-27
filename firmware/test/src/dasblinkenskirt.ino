@@ -1,7 +1,7 @@
 #include "dasblinkenskirt.h"
 
 // Initial values for colors
-uint8_t color_r = 0;
+uint8_t color_r = 255;
 uint8_t color_g = 0;
 uint8_t color_b = 0;
 
@@ -131,8 +131,7 @@ void loop() {
   }
 
   // Perform settings
-  //led_driver.goToRGB(color_r, color_g, color_b);
-  //led_driver.setCurrent(iset_r, iset_g, iset_b);
-  //delay(1000);
+  led_driver.goToRGB(color_r, color_g, color_b);
+  led_driver.setCurrent(iset_r, iset_g, iset_b);
 
 }
