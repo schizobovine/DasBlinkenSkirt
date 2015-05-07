@@ -12559,7 +12559,7 @@ Standard 8-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="G" library="A_butts" deviceset="M02" device="3.5MM-NO_SILK"/>
 <part name="B" library="A_butts" deviceset="M02" device="3.5MM-NO_SILK"/>
 <part name="U1" library="A_butts" deviceset="ARDUINO_SHIELD_SMALLER" device=""/>
-<part name="I2C" library="A_butts" deviceset="M04" device="JST-PTH"/>
+<part name="I2C" library="A_butts" deviceset="M04" device="JST_XH_RA" value="M04JST_XH_RA"/>
 <part name="GND1" library="A_butts" deviceset="GND" device=""/>
 <part name="GND2" library="A_butts" deviceset="GND" device=""/>
 <part name="SUPPLY1" library="A_butts" deviceset="5V" device=""/>
